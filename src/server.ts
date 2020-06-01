@@ -1,45 +1,36 @@
+import {EntityManager, EntityRepository, MikroORM} from "mikro-orm";
+import {Champion} from "./entities/Champion";
+import {MongoDriver} from "mikro-orm/dist/drivers/MongoDriver";
 import express from "express";
 import {championRoute} from "./routes/ChampionRoute";
-
-export default class Server{
-
-    readonly port: number
-
-    constructor(port: number) {
-        this.port=port;
-    }
-
-    start(){
-        const app = express();
-        app.use('/champion', championRoute);
+import {errorRoute} from "./routes/ErrorRoute";
+import {Stats} from "./entities/Stats";
+import {Skill} from "./entities/Skill";
 
 
-        app.listen(this.port, function () {
-            console.log("Serveur démarré");
-        });
+export const DI = {} as {
+    orm: MikroORM,
+    em: EntityManager,
+    championEntityRepository: EntityRepository<Champion>
+};
 
-        app.use(this.logErrors);
-        app.use(this.clientErrorHandler);
-        app.use(this.errorHandler);
+const app = express();
+const port = process.env.PORT || 4000;
 
-    }
+(async () => {
+    const orm: MikroORM<MongoDriver> = await MikroORM.init({
+        entities: [Champion],
+        type: 'mongo',
+        dbName: 'raid-shadow-legends-french',
+        clientUrl: 'mongodb://localhost:27017',
+        baseDir: __dirname, // defaults to `process.cwd()`
+    });
+    DI.em = orm.em;
+    DI.championEntityRepository = orm.em.getRepository(Champion);
 
-    private logErrors = (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) =>{
-        console.error(err.stack);
-        next(err);
-    }
-
-    private clientErrorHandler = (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-        if (req.xhr) {
-            res.status(500).send({ error: 'Something failed!' });
-        } else {
-            next(err);
-        }
-    }
-
-    private errorHandler= (err: Error, req: express.Request, res: express.Response) => {
-        res.status(500);
-        res.json( { error: err.message });
-    }
-
-}
+    app.use('/champion', championRoute);
+    app.use(errorRoute);
+    app.listen(port, function () {
+        console.log("Serveur démarré");
+    });
+})();
