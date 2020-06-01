@@ -1,5 +1,5 @@
 import express from "express";
-import {userRoutes} from "./routes/UserRoutes";
+import {championRoute} from "./routes/ChampionRoute";
 
 export default class Server{
 
@@ -11,11 +11,35 @@ export default class Server{
 
     start(){
         const app = express();
-        app.use('/users', userRoutes);
+        app.use('/champion', championRoute);
 
 
         app.listen(this.port, function () {
             console.log("Serveur démarré");
         });
+
+        app.use(this.logErrors);
+        app.use(this.clientErrorHandler);
+        app.use(this.errorHandler);
+
     }
+
+    private logErrors = (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) =>{
+        console.error(err.stack);
+        next(err);
+    }
+
+    private clientErrorHandler = (err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+        if (req.xhr) {
+            res.status(500).send({ error: 'Something failed!' });
+        } else {
+            next(err);
+        }
+    }
+
+    private errorHandler= (err: Error, req: express.Request, res: express.Response) => {
+        res.status(500);
+        res.json( { error: err.message });
+    }
+
 }
