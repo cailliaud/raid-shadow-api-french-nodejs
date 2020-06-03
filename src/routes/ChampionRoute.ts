@@ -1,6 +1,7 @@
 import express from "express";
 import {Champion} from "../entities/Champion";
 import {DI} from "../server";
+import {FilterQuery} from "mikro-orm";
 
 
 const router = express.Router();
@@ -14,8 +15,16 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 });
 
 router.get('/:championName', async (req: express.Request, res: express.Response) => {
-    const championName = req.params.championName;
-    res.status(501);
+    const championName = req.params.championName
+    const query = {name: championName} as FilterQuery<Champion>;
+    await DI.championEntityRepository.findOne(query)
+        .then(champion => {
+            if (champion == null) {
+                res.status(404).send({error: 'Not found'});
+            } else {
+                res.status(200).json(champion);
+            }
+        });
 
 });
 

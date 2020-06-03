@@ -8,7 +8,7 @@ export class Champion {
     @PrimaryKey()
     _id!: ObjectId;
     @Property()
-    private name!: string;
+    private name: string;
     @Enum()
     private faction: Faction;
     @Enum()
@@ -20,11 +20,11 @@ export class Champion {
     @Property()
     private stats: Stats;
     @Property()
-    private skills: Collection<Skill>;
+    private skills: Skill[];
     @Property()
     private aura: string;
 
-    constructor(name: string, faction: Faction, rarity: Rarity, affinity: Affinity, type: Type, stats: Stats, skills: Collection<Skill>, aura: string) {
+    constructor(name: string, faction: Faction, rarity: Rarity, affinity: Affinity, type: Type, stats: Stats, skills: Skill[], aura: string) {
         this.name = name;
         this.faction = faction;
         this.rarity = rarity;
